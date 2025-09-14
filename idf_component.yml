@@ -1,0 +1,14 @@
+
+description: ESP-BSP-SDL Abstraction Layer Component. Board-specific BSP dependencies based on Kconfig selection for SDL3.
+dependencies:
+  # IDF version requirement
+  idf:
+    version: '>=5.5.0'
+  # Note: BSP dependencies are handled conditionally in CMakeLists.txt
+  # to avoid multiple definition conflicts when multiple BSPs are available
+
+
+license: MIT License and the Apache License 2.0
+repository: https://github.com/georgik/esp-idf-componet-SDL_bsp
+url: https://github.com/georgik/esp-idf-componet-SDL_bsp
+version: 3.3.0~2
