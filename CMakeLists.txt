@@ -7,6 +7,7 @@ set(board_deps "")
 # Add board-specific source files and dependencies based on Kconfig selection
 # These CONFIG_ variables are set by the sdkconfig.defaults.<board> files
 
+
 # M5Stack Boards
 if(CONFIG_ESP_BSP_SDL_BOARD_M5STACK_CORE_S3)
     list(APPEND srcs "src/boards/esp_bsp_sdl_m5stack_core_s3.c")
@@ -48,7 +49,7 @@ elseif(CONFIG_ESP_BSP_SDL_BOARD_ESP_BSP_DEVKIT)
 # Legacy/Deprecated Boards (kept for compatibility)
 elseif(CONFIG_ESP_BSP_SDL_BOARD_ESP_BOX_3)
     list(APPEND srcs "src/boards/esp_bsp_sdl_esp_box_3.c")
-    list(APPEND board_deps "esp-box-3_noglib")
+    list(APPEND board_deps "espressif__esp-box-3_noglib")
     message(STATUS "ESP-BSP SDL: Building for ESP32-S3-BOX-3 (320x240, OCTAL PSRAM)")
     
 else()
@@ -75,4 +76,5 @@ idf_component_register(
     INCLUDE_DIRS "include"
     REQUIRES ${board_deps}
     PRIV_REQUIRES ${board_deps} esp_lcd esp_lcd_touch ${extra_reqs}
+                  espressif__esp-box-3_noglib espressif__m5_atom_s3_noglib
 )
