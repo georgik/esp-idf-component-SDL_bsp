@@ -7,6 +7,7 @@
 
 #include "esp_bsp_devkit.h"
 #include "esp_bsp_sdl.h"
+#include "esp_err.h"
 #include "esp_log.h"
 #include "sdkconfig.h"
 

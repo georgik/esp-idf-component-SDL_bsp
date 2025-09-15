@@ -7,6 +7,7 @@
 #include "bsp/display.h"
 #include "bsp/m5_atom_s3.h"
 #include "esp_bsp_sdl.h"
+#include "esp_err.h"
 #include "esp_lcd_touch.h"
 #include "esp_log.h"
 #include "sdkconfig.h"
