@@ -3,11 +3,14 @@
  * @brief ESP-Box-3 specific implementation for ESP-BSP SDL abstraction layer
  */
 
-#include "esp_bsp_sdl.h"
-#include "esp_log.h"
 #include "sdkconfig.h"
 
-// Include ESP-Box-3 BSP headers
+#ifdef CONFIG_ESP_BSP_SDL_BOARD_ESP_BOX_3
+
+#include "esp_bsp_sdl.h"
+#include "esp_log.h"
+
+// Include ESP-Box-3 BSP headers - only when this board is selected
 #include "bsp/esp-bsp.h"
 #include "bsp/display.h"
 #if BSP_CAPS_TOUCH == 1
@@ -31,11 +34,11 @@ esp_err_t esp_bsp_sdl_board_init(esp_bsp_sdl_display_config_t *config,
         return ESP_ERR_INVALID_ARG;
     }
     
-    // Fill in display configuration
-    config->width = BSP_LCD_H_RES;
-    config->height = BSP_LCD_V_RES;
+    // Fill in display configuration for ESP-BOX-3 (320x240)
+    config->width = 320;  // ESP-BOX-3 specific resolution
+    config->height = 240; // ESP-BOX-3 specific resolution
     config->pixel_format = SDL_PIXELFORMAT_RGB565;
-    config->max_transfer_sz = (BSP_LCD_H_RES * BSP_LCD_V_RES) * sizeof(uint16_t);
+    config->max_transfer_sz = (320 * 240) * sizeof(uint16_t);
     config->has_touch = BSP_CAPS_TOUCH == 1;
     
     // Initialize BSP display
@@ -142,3 +145,5 @@ esp_err_t esp_bsp_sdl_board_deinit(void)
     
     return ESP_OK;
 }
+
+#endif // CONFIG_ESP_BSP_SDL_BOARD_ESP_BOX_3

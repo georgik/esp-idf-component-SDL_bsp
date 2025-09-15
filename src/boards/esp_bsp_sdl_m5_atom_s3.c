@@ -4,9 +4,12 @@
  * Uses official espressif/m5_atom_s3_noglib BSP
  */
 
+#include "sdkconfig.h"
+
+#ifdef CONFIG_ESP_BSP_SDL_BOARD_M5_ATOM_S3
+
 #include "esp_bsp_sdl.h"
 #include "esp_log.h"
-#include "sdkconfig.h"
 #include "bsp/m5_atom_s3.h"
 #include "bsp/display.h"
 #include "esp_lcd_touch.h"
@@ -30,14 +33,22 @@ esp_err_t esp_bsp_sdl_board_init(esp_bsp_sdl_display_config_t *config,
     
     esp_err_t ret = ESP_OK;
     
-    // Step 1: Fill in display configuration for M5 Atom S3
-    config->width = BSP_LCD_H_RES;
-    config->height = BSP_LCD_V_RES;
+    // Step 1: Fill in display configuration for M5 Atom S3 (128x128)
+    config->width = 128;  // M5 Atom S3 specific resolution
+    config->height = 128; // M5 Atom S3 specific resolution
     config->pixel_format = SDL_PIXELFORMAT_RGB565;
-    config->max_transfer_sz = (BSP_LCD_H_RES * BSP_LCD_V_RES) * sizeof(uint16_t);
+    config->max_transfer_sz = (128 * 128) * sizeof(uint16_t);
     config->has_touch = BSP_CAPS_TOUCH == 1;
     
-    // Step 2: Initialize BSP display using the official BSP
+    // Step 2: Initialize backlight PWM control FIRST (M5 Atom S3 requires this)
+    ESP_LOGI(TAG, "Initializing backlight control...");
+    ret = bsp_display_brightness_init();
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to initialize backlight PWM: %s", esp_err_to_name(ret));
+        return ret;
+    }
+    
+    // Step 3: Initialize BSP display using the official BSP
     ESP_LOGI(TAG, "Initializing display panel...");
     const bsp_display_config_t bsp_disp_cfg = {
         .max_transfer_sz = config->max_transfer_sz,
@@ -49,7 +60,7 @@ esp_err_t esp_bsp_sdl_board_init(esp_bsp_sdl_display_config_t *config,
         return ret;
     }
     
-    // Step 3: Turn on the display
+    // Step 4: Turn on the display
     ESP_LOGI(TAG, "Enabling display...");
     ret = esp_lcd_panel_disp_on_off(s_panel_handle, true);
     if (ret != ESP_OK) {
@@ -57,20 +68,12 @@ esp_err_t esp_bsp_sdl_board_init(esp_bsp_sdl_display_config_t *config,
         return ret;
     }
     
-    // Step 4: Initialize backlight PWM control (LEDC)
-    ESP_LOGI(TAG, "Initializing backlight control...");
-    ret = bsp_display_brightness_init();
-    if (ret != ESP_OK) {
-        ESP_LOGE(TAG, "Failed to initialize backlight PWM: %s", esp_err_to_name(ret));
-        return ret;
-    }
-    
-    // Step 5: Turn on backlight (if supported)
+    // Step 5: Turn on backlight (M5 Atom S3 specific)
     ESP_LOGI(TAG, "Turning on backlight...");
     ret = bsp_display_backlight_on();
     if (ret != ESP_OK) {
-        ESP_LOGW(TAG, "Backlight control not available or failed: %s", esp_err_to_name(ret));
-        // Don't return error - backlight might not be controllable on this board
+        ESP_LOGE(TAG, "Failed to turn on backlight: %s", esp_err_to_name(ret));
+        return ret;
     }
     
     // Return handles to caller
@@ -84,13 +87,13 @@ esp_err_t esp_bsp_sdl_board_init(esp_bsp_sdl_display_config_t *config,
 
 esp_err_t esp_bsp_sdl_board_backlight_on(void)
 {
-    ESP_LOGI(TAG, "Turning backlight on");
+    ESP_LOGI(TAG, "M5 Atom S3: Turning backlight on");
     return bsp_display_backlight_on();
 }
 
-int esp_bsp_sdl_board_backlight_off(void)
+esp_err_t esp_bsp_sdl_board_backlight_off(void)
 {
-    ESP_LOGI(TAG, "Turning backlight off");
+    ESP_LOGI(TAG, "M5 Atom S3: Turning backlight off");
     return bsp_display_backlight_off();
 }
 
@@ -156,3 +159,5 @@ esp_err_t esp_bsp_sdl_board_deinit(void)
     
     return ESP_OK;
 }
+
+#endif // CONFIG_ESP_BSP_SDL_BOARD_M5_ATOM_S3

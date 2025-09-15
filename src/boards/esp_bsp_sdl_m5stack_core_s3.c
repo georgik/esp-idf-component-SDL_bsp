@@ -4,9 +4,12 @@
  * Uses official espressif/m5stack_core_s3_noglib BSP
  */
 
+#include "sdkconfig.h"
+
+#ifdef CONFIG_ESP_BSP_SDL_BOARD_M5STACK_CORE_S3
+
 #include "esp_bsp_sdl.h"
 #include "esp_log.h"
-#include "sdkconfig.h"
 #include "bsp/m5stack_core_s3.h"
 #include "bsp/display.h"
 #include "bsp/touch.h"
@@ -199,3 +202,5 @@ esp_err_t esp_bsp_sdl_board_deinit(void)
     
     return ESP_OK;
 }
+
+#endif // CONFIG_ESP_BSP_SDL_BOARD_M5STACK_CORE_S3
