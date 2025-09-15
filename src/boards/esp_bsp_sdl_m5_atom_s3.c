@@ -4,13 +4,16 @@
  * Uses official espressif/m5_atom_s3_noglib BSP
  */
 
-#include "esp_err.h"
-#include "bsp/display.h"
-#include "bsp/m5_atom_s3.h"
 #include "esp_bsp_sdl.h"
-#include "esp_lcd_touch.h"
+#include "esp_err.h"
 #include "esp_log.h"
 #include "sdkconfig.h"
+
+// Include M5 Atom S3 BSP headers - only when this board is selected
+#include "bsp/display.h"
+// #include "bsp/m5_atom_s3.h"
+#define BSP_CAPS_TOUCH 0
+// #include "esp_lcd_touch.h"
 
 // SDL pixel format constants - using direct values to avoid SDL dependency
 #define SDL_PIXELFORMAT_RGB565 0x15151002u

@@ -9,8 +9,10 @@
 #include "sdkconfig.h"
 
 // Include ESP-Box-3 BSP headers - only when this board is selected
+// #include "esp_box_3_noglib/bsp/display.h"
 #include "bsp/display.h"
 #include "bsp/esp-bsp.h"
+#define BSP_CAPS_TOUCH 0
 #if BSP_CAPS_TOUCH == 1
 #    include "bsp/touch.h"
 #endif

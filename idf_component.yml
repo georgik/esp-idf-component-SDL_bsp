@@ -4,8 +4,28 @@ dependencies:
   # IDF version requirement
   idf:
     version: '>=5.5.0'
-  # Note: BSP dependencies are handled conditionally in CMakeLists.txt
-  # to avoid multiple definition conflicts when multiple BSPs are available
+  
+  # Conditional BSP dependencies - only load the BSP for the selected board
+  espressif/m5_atom_s3_noglib:
+    version: "~1.0.0"
+    matches:
+      - if: "$CONFIG{SDL_BSP_M5_ATOM_S3} == True"
+  espressif/esp-box-3_noglib:
+    version: "*"
+    matches:
+      - if: "$CONFIG{SDL_BSP_ESP_BOX_3} == True"
+  espressif/m5stack_core_s3_noglib:
+    version: "*"
+    matches:
+      - if: "$CONFIG{SDL_BSP_M5STACK_CORE_S3} == True"
+  espressif/esp32_p4_function_ev_board_noglib:
+    version: "*"
+    matches:
+      - if: "$CONFIG{SDL_BSP_ESP32_P4_FUNCTION_EV} == True"
+  espressif/esp32_s3_lcd_ev_board_noglib:
+    version: "*"
+    matches:
+      - if: "$CONFIG{SDL_BSP_ESP32_S3_LCD_EV_BOARD} == True"
 
 
 license: MIT License and the Apache License 2.0

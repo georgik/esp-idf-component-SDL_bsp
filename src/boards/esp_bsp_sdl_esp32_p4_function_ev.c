@@ -4,14 +4,16 @@
  * Uses official espressif/esp32_p4_function_ev_board_noglib BSP
  */
 
+#include "esp_bsp_sdl.h"
 #include "esp_err.h"
+#include "esp_log.h"
+#include "sdkconfig.h"
+
+// Include ESP32-P4 Function EV Board BSP headers - only when this board is selected
 #include "bsp/display.h"
 #include "bsp/touch.h"
 #include "bsp/esp32_p4_function_ev_board.h"
-#include "esp_bsp_sdl.h"
 #include "esp_lcd_touch.h"
-#include "esp_log.h"
-#include "sdkconfig.h"
 
 // SDL pixel format constants - using direct values to avoid SDL dependency
 #define SDL_PIXELFORMAT_RGB565 0x15151002u
