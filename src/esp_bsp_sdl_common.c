@@ -1,6 +1,6 @@
 /**
  * @file esp_bsp_sdl_common.c
- * @brief Common implementation for ESP-BSP SDL abstraction layer
+ * @brief Runtime board selection for ESP-BSP SDL abstraction layer
  */
 
 #include "esp_bsp_sdl.h"
@@ -9,64 +9,124 @@
 
 static const char *TAG = "esp_bsp_sdl";
 
-// Forward declarations for board-specific functions
-extern esp_err_t esp_bsp_sdl_board_init(esp_bsp_sdl_display_config_t *config, 
-                                        esp_lcd_panel_handle_t *panel_handle,
-                                        esp_lcd_panel_io_handle_t *panel_io_handle);
-extern esp_err_t esp_bsp_sdl_board_backlight_on(void);
-extern esp_err_t esp_bsp_sdl_board_backlight_off(void);
-extern esp_err_t esp_bsp_sdl_board_display_on_off(bool enable);
-extern esp_err_t esp_bsp_sdl_board_touch_init(void);
-extern esp_err_t esp_bsp_sdl_board_touch_read(esp_bsp_sdl_touch_info_t *touch_info);
-extern const char* esp_bsp_sdl_board_get_name(void);
-extern esp_err_t esp_bsp_sdl_board_deinit(void);
+// Board interface structure is defined in esp_bsp_sdl.h
 
-esp_err_t esp_bsp_sdl_init(esp_bsp_sdl_display_config_t *config, 
-                          esp_lcd_panel_handle_t *panel_handle,
-                          esp_lcd_panel_io_handle_t *panel_io_handle)
+// Conditional forward declarations for board implementations based on what's being compiled
+#ifdef CONFIG_ESP_BSP_SDL_BOARD_M5_ATOM_S3
+extern const esp_bsp_sdl_board_interface_t esp_bsp_sdl_m5_atom_s3_interface;
+#endif
+#ifdef CONFIG_ESP_BSP_SDL_BOARD_ESP_BOX_3
+extern const esp_bsp_sdl_board_interface_t esp_bsp_sdl_esp_box_3_interface;
+#endif
+#ifdef CONFIG_ESP_BSP_SDL_BOARD_M5STACK_CORE_S3
+extern const esp_bsp_sdl_board_interface_t esp_bsp_sdl_m5stack_core_s3_interface;
+#endif
+
+static const esp_bsp_sdl_board_interface_t *s_current_board = NULL;
+
+// Runtime board detection based on Kconfig
+static const esp_bsp_sdl_board_interface_t *detect_board(void)
+{
+#ifdef CONFIG_ESP_BSP_SDL_BOARD_M5_ATOM_S3
+    ESP_LOGI(TAG, "Detected board: M5 Atom S3");
+    return &esp_bsp_sdl_m5_atom_s3_interface;
+#elif CONFIG_ESP_BSP_SDL_BOARD_ESP_BOX_3
+    ESP_LOGI(TAG, "Detected board: ESP32-S3-BOX-3");
+    return &esp_bsp_sdl_esp_box_3_interface;
+#elif CONFIG_ESP_BSP_SDL_BOARD_M5STACK_CORE_S3
+    ESP_LOGI(TAG, "Detected board: M5Stack CoreS3");
+    return &esp_bsp_sdl_m5stack_core_s3_interface;
+#else
+    ESP_LOGE(TAG, "No board configuration detected!");
+    return NULL;
+#endif
+}
+
+esp_err_t esp_bsp_sdl_init(esp_bsp_sdl_display_config_t *config,
+                           esp_lcd_panel_handle_t *panel_handle,
+                           esp_lcd_panel_io_handle_t *panel_io_handle)
 {
     ESP_LOGI(TAG, "Initializing ESP-BSP SDL abstraction layer");
-    ESP_LOGI(TAG, "Selected board: %s", esp_bsp_sdl_get_board_name());
-    
-    return esp_bsp_sdl_board_init(config, panel_handle, panel_io_handle);
+
+    // Detect and select the board at runtime
+    s_current_board = detect_board();
+    if(!s_current_board) {
+        ESP_LOGE(TAG, "Failed to detect board configuration");
+        return ESP_ERR_NOT_SUPPORTED;
+    }
+
+    ESP_LOGI(TAG, "Selected board: %s", s_current_board->board_name);
+
+    return s_current_board->init(config, panel_handle, panel_io_handle);
 }
 
 esp_err_t esp_bsp_sdl_backlight_on(void)
 {
-    return esp_bsp_sdl_board_backlight_on();
+    if(!s_current_board) {
+        ESP_LOGE(TAG, "Board not initialized");
+        return ESP_ERR_INVALID_STATE;
+    }
+    return s_current_board->backlight_on();
 }
 
 esp_err_t esp_bsp_sdl_backlight_off(void)
 {
-    return esp_bsp_sdl_board_backlight_off();
+    if(!s_current_board) {
+        ESP_LOGE(TAG, "Board not initialized");
+        return ESP_ERR_INVALID_STATE;
+    }
+    return s_current_board->backlight_off();
 }
 
 esp_err_t esp_bsp_sdl_display_on_off(bool enable)
 {
-    return esp_bsp_sdl_board_display_on_off(enable);
+    if(!s_current_board) {
+        ESP_LOGE(TAG, "Board not initialized");
+        return ESP_ERR_INVALID_STATE;
+    }
+    return s_current_board->display_on_off(enable);
 }
 
 esp_err_t esp_bsp_sdl_touch_init(void)
 {
-    return esp_bsp_sdl_board_touch_init();
+    if(!s_current_board) {
+        ESP_LOGE(TAG, "Board not initialized");
+        return ESP_ERR_INVALID_STATE;
+    }
+    return s_current_board->touch_init();
 }
 
 esp_err_t esp_bsp_sdl_touch_read(esp_bsp_sdl_touch_info_t *touch_info)
 {
-    if (!touch_info) {
+    if(!touch_info) {
         return ESP_ERR_INVALID_ARG;
     }
-    
-    return esp_bsp_sdl_board_touch_read(touch_info);
+
+    if(!s_current_board) {
+        ESP_LOGE(TAG, "Board not initialized");
+        return ESP_ERR_INVALID_STATE;
+    }
+
+    return s_current_board->touch_read(touch_info);
 }
 
-const char* esp_bsp_sdl_get_board_name(void)
+const char *esp_bsp_sdl_get_board_name(void)
 {
-    return esp_bsp_sdl_board_get_name();
+    if(!s_current_board) {
+        return "Unknown";
+    }
+    return s_current_board->board_name;
 }
 
 esp_err_t esp_bsp_sdl_deinit(void)
 {
     ESP_LOGI(TAG, "Deinitializing ESP-BSP SDL abstraction layer");
-    return esp_bsp_sdl_board_deinit();
+
+    if(!s_current_board) {
+        return ESP_OK;
+    }
+
+    esp_err_t ret = s_current_board->deinit();
+    s_current_board = NULL;
+    return ret;
 }

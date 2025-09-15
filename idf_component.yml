@@ -12,3 +12,9 @@ license: MIT License and the Apache License 2.0
 repository: https://github.com/georgik/esp-idf-componet-SDL_bsp
 url: https://github.com/georgik/esp-idf-componet-SDL_bsp
 version: 3.3.0~2
+
+exclude:
+  - build/**
+  - support/**
+  - .clang-format
+  - sdkconfig
