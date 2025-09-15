@@ -6,32 +6,43 @@ cmake_minimum_required(VERSION 3.16)
 # Conditional source files based on board selection to avoid compilation errors
 set(COMPONENT_SRCS "src/esp_bsp_sdl_common.c")
 
-# Add board-specific sources based on build configuration
-if(DEFINED ENV{BUILD_FOR_BOX3} OR "$ENV{BUILD_FOR_BOX3}" STREQUAL "1")
-    list(APPEND COMPONENT_SRCS "src/boards/esp_bsp_sdl_esp_box_3.c")
-    message(STATUS "ESP-BSP SDL: Including ESP32-S3-BOX-3 source files")
-else()
-    # Default to M5 Atom S3
+# Add board-specific sources based on Kconfig selection
+if(CONFIG_ESP_BSP_SDL_BOARD_M5_ATOM_S3)
     list(APPEND COMPONENT_SRCS "src/boards/esp_bsp_sdl_m5_atom_s3.c")
     message(STATUS "ESP-BSP SDL: Including M5 Atom S3 source files")
+elseif(CONFIG_ESP_BSP_SDL_BOARD_ESP_BOX_3)
+    list(APPEND COMPONENT_SRCS "src/boards/esp_bsp_sdl_esp_box_3.c")
+    message(STATUS "ESP-BSP SDL: Including ESP32-S3-BOX-3 source files")
+elseif(CONFIG_ESP_BSP_SDL_BOARD_M5STACK_CORE_S3)
+    list(APPEND COMPONENT_SRCS "src/boards/esp_bsp_sdl_m5stack_core_s3.c")
+    message(STATUS "ESP-BSP SDL: Including M5Stack Core S3 source files")
+elseif(CONFIG_ESP_BSP_SDL_BOARD_ESP32_P4_FUNCTION_EV)
+    list(APPEND COMPONENT_SRCS "src/boards/esp_bsp_sdl_esp32_p4_function_ev.c")
+    message(STATUS "ESP-BSP SDL: Including ESP32-P4 Function EV Board source files")
+else()
+    message(WARNING "ESP-BSP SDL: No board selected in menuconfig!")
 endif()
 
 # Include only the required BSP dependencies - this is the minimum required
 set(COMPONENT_REQUIRES "esp_lcd")
-set(COMPONENT_PRIV_REQUIRES "espressif__esp_lcd_touch")
+set(COMPONENT_PRIV_REQUIRES "espressif__esp_lcd_touch" "espressif__esp32_p4_function_ev_board_noglib")
 
 # Conditional BSP selection to avoid symbol conflicts
-# Both M5 Atom S3 and ESP-BOX-3 BSPs define identical function names
-# We include only the required BSP based on build configuration
-
-# Check if we're building for ESP32-S3-BOX-3
-if(DEFINED ENV{BUILD_FOR_BOX3} OR "$ENV{BUILD_FOR_BOX3}" STREQUAL "1")
-    list(APPEND COMPONENT_PRIV_REQUIRES "espressif__esp-box-3_noglib")
-    message(STATUS "ESP-BSP SDL: Including ESP32-S3-BOX-3 BSP (M5 Atom S3 excluded to prevent conflicts)")
-else()
-    # Default to M5 Atom S3
+# Each board BSP is included separately to prevent function name conflicts
+if(CONFIG_ESP_BSP_SDL_BOARD_M5_ATOM_S3)
     list(APPEND COMPONENT_PRIV_REQUIRES "espressif__m5_atom_s3_noglib")
-    message(STATUS "ESP-BSP SDL: Including M5 Atom S3 BSP (ESP-BOX-3 excluded to prevent conflicts)")
+    message(STATUS "ESP-BSP SDL: Including M5 Atom S3 BSP")
+elseif(CONFIG_ESP_BSP_SDL_BOARD_ESP_BOX_3)
+    list(APPEND COMPONENT_PRIV_REQUIRES "espressif__esp-box-3_noglib")
+    message(STATUS "ESP-BSP SDL: Including ESP32-S3-BOX-3 BSP")
+elseif(CONFIG_ESP_BSP_SDL_BOARD_M5STACK_CORE_S3)
+    list(APPEND COMPONENT_PRIV_REQUIRES "espressif__m5stack_core_s3")
+    message(STATUS "ESP-BSP SDL: Including M5Stack Core S3 BSP")
+elseif(CONFIG_ESP_BSP_SDL_BOARD_ESP32_P4_FUNCTION_EV)
+    list(APPEND COMPONENT_PRIV_REQUIRES "espressif__esp32_p4_function_ev_board_noglib")
+    message(STATUS "ESP-BSP SDL: Including ESP32-P4 Function EV Board BSP")
+else()
+    message(WARNING "ESP-BSP SDL: No BSP dependency selected!")
 endif()
 
 # This approach ensures:
@@ -55,6 +66,8 @@ elseif(CONFIG_ESP_BSP_SDL_BOARD_M5STACK_CORE_S3)
     message(STATUS "ESP-BSP SDL: Building for M5Stack CoreS3 (320x240, QUAD PSRAM)")
 elseif(CONFIG_ESP_BSP_SDL_BOARD_ESP_BOX_3)
     message(STATUS "ESP-BSP SDL: Building for ESP32-S3-BOX-3 (320x240, OCTAL PSRAM)")
+elseif(CONFIG_ESP_BSP_SDL_BOARD_ESP32_P4_FUNCTION_EV)
+    message(STATUS "ESP-BSP SDL: Building for ESP32-P4 Function EV Board (1280x800, 32MB PSRAM)")
 else()
     message(WARNING "ESP-BSP SDL: No specific board detected in configuration. Check menuconfig.")
 endif()

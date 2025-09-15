@@ -21,6 +21,9 @@ extern const esp_bsp_sdl_board_interface_t esp_bsp_sdl_esp_box_3_interface;
 #ifdef CONFIG_ESP_BSP_SDL_BOARD_M5STACK_CORE_S3
 extern const esp_bsp_sdl_board_interface_t esp_bsp_sdl_m5stack_core_s3_interface;
 #endif
+#ifdef CONFIG_ESP_BSP_SDL_BOARD_ESP32_P4_FUNCTION_EV
+extern const esp_bsp_sdl_board_interface_t esp_bsp_sdl_esp32_p4_function_ev_interface;
+#endif
 
 static const esp_bsp_sdl_board_interface_t *s_current_board = NULL;
 
@@ -36,6 +39,9 @@ static const esp_bsp_sdl_board_interface_t *detect_board(void)
 #elif CONFIG_ESP_BSP_SDL_BOARD_M5STACK_CORE_S3
     ESP_LOGI(TAG, "Detected board: M5Stack CoreS3");
     return &esp_bsp_sdl_m5stack_core_s3_interface;
+#elif CONFIG_ESP_BSP_SDL_BOARD_ESP32_P4_FUNCTION_EV
+    ESP_LOGI(TAG, "Detected board: ESP32-P4 Function EV Board");
+    return &esp_bsp_sdl_esp32_p4_function_ev_interface;
 #else
     ESP_LOGE(TAG, "No board configuration detected!");
     return NULL;

@@ -53,7 +53,7 @@ menu "ESP-BSP SDL Configuration"
         default "m5stack_core_s3" if ESP_BSP_SDL_BOARD_M5STACK_CORE_S3
         default "m5_atom_s3" if ESP_BSP_SDL_BOARD_M5_ATOM_S3
         default "esp32_c3_lcdkit" if ESP_BSP_SDL_BOARD_ESP32_C3_LCDKIT
-        default "esp32_p4_function_ev_board" if ESP_BSP_SDL_BOARD_ESP32_P4_FUNCTION_EV
+        default "esp32_p4_function_ev_board_noglib" if ESP_BSP_SDL_BOARD_ESP32_P4_FUNCTION_EV
 
     config ESP_BSP_SDL_SDKCONFIG_SUFFIX
         string
@@ -63,6 +63,6 @@ menu "ESP-BSP SDL Configuration"
         default "m5stack_core_s3" if ESP_BSP_SDL_BOARD_M5STACK_CORE_S3
         default "m5_atom_s3" if ESP_BSP_SDL_BOARD_M5_ATOM_S3
         default "esp32_c3_lcdkit" if ESP_BSP_SDL_BOARD_ESP32_C3_LCDKIT
-        default "esp32_p4_function_ev_board" if ESP_BSP_SDL_BOARD_ESP32_P4_FUNCTION_EV
+        default "esp32_p4_function_ev" if ESP_BSP_SDL_BOARD_ESP32_P4_FUNCTION_EV
 
 endmenu
