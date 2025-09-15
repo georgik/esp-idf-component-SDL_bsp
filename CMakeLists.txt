@@ -1,6 +1,4 @@
 cmake_minimum_required(VERSION 3.16)
-include($ENV{IDF_PATH}/tools/cmake/project.cmake)
-project(esp-idf-component-SDL_bsp)
 
 # ESP-BSP SDL Abstraction Layer Component
 # Kconfig-based BSP selection to avoid header conflicts
