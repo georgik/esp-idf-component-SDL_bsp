@@ -26,6 +26,12 @@ dependencies:
     version: "*"
     matches:
       - if: "$CONFIG{SDL_BSP_ESP32_S3_LCD_EV_BOARD} == True"
+  georgik/m5stack_tab5:
+    version: "feature/m5stack-tab5-sdl3"
+    git: "https://github.com/georgik/esp-bsp.git"
+    path: "bsp/m5stack_tab5"
+    matches:
+      - if: "$CONFIG{SDL_BSP_M5STACK_TAB5} == True"
 
 
 license: MIT License and the Apache License 2.0
