@@ -31,6 +31,7 @@ endif()
 
 # Include only the required BSP dependencies - this is the minimum required
 set(COMPONENT_REQUIRES "esp_lcd")
+set(COMPONENT_PRIV_REQUIRES "espressif__esp_lcd_touch")
 
 # Conditional BSP selection to avoid symbol conflicts
 # Each board BSP is included separately to prevent function name conflicts
@@ -42,12 +43,15 @@ elseif(CONFIG_SDL_BSP_ESP_BOX_3)
     message(STATUS "ESP-BSP SDL: Including ESP32-S3-BOX-3 BSP")
 elseif(CONFIG_SDL_BSP_M5STACK_CORE_S3)
     list(APPEND COMPONENT_PRIV_REQUIRES "espressif__m5stack_core_s3_noglib")
+    list(APPEND COMPONENT_PRIV_REQUIRES "espressif__esp_lcd_touch")
     message(STATUS "ESP-BSP SDL: Including M5Stack Core S3 BSP")
 elseif(CONFIG_SDL_BSP_ESP32_P4_FUNCTION_EV)
     list(APPEND COMPONENT_PRIV_REQUIRES "espressif__esp32_p4_function_ev_board_noglib")
+    list(APPEND COMPONENT_PRIV_REQUIRES "espressif__esp_lcd_touch")
     message(STATUS "ESP-BSP SDL: Including ESP32-P4 Function EV Board BSP")
 elseif(CONFIG_SDL_BSP_ESP32_S3_LCD_EV_BOARD)
     list(APPEND COMPONENT_PRIV_REQUIRES "espressif__esp32_s3_lcd_ev_board_noglib")
+    list(APPEND COMPONENT_PRIV_REQUIRES "espressif__esp_lcd_touch")
     message(STATUS "ESP-BSP SDL: Including ESP32-S3-LCD-EV-Board BSP")
 elseif(CONFIG_SDL_BSP_M5STACK_TAB5)
     list(APPEND COMPONENT_PRIV_REQUIRES "georgik__m5stack_tab5")

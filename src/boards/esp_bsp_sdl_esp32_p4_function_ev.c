@@ -11,9 +11,19 @@
 
 // Include ESP32-P4 Function EV Board BSP headers - only when this board is selected
 #include "bsp/display.h"
-#include "bsp/touch.h"
 #include "bsp/esp32_p4_function_ev_board.h"
+
+// Forward declarations for touch support to avoid including problematic headers
+// The managed BSP component doesn't have esp_lcd_touch dependency, so we include it directly
 #include "esp_lcd_touch.h"
+
+// Define BSP touch types to avoid including bsp/touch.h which causes compilation errors
+typedef struct {
+    void *dummy;  /*!< Reserved for future use. */
+} bsp_touch_config_t;
+
+// Function prototype for bsp_touch_new (from the BSP) 
+esp_err_t bsp_touch_new(const bsp_touch_config_t *config, esp_lcd_touch_handle_t *ret_touch);
 
 // SDL pixel format constants - using direct values to avoid SDL dependency
 #define SDL_PIXELFORMAT_RGB565 0x15151002u
@@ -38,11 +48,11 @@ static esp_err_t esp32_p4_function_ev_init(esp_bsp_sdl_display_config_t *config,
 
     // Step 1: Fill in display configuration for ESP32-P4 Function EV Board
     // Default LCD is 1280x800 ili9881c, but can be configured via menuconfig
-#ifdef CONFIG_BSP_LCD_EK79007
-    config->width = 1024;  // EK79007 LCD resolution
+#ifdef CONFIG_BSP_LCD_TYPE_1024_600
+    config->width = 1024;  // EK79007 LCD resolution 1024x600
     config->height = 600;
-#elif defined(CONFIG_BSP_LCD_ILI9881C)
-    config->width = 1280;  // ILI9881C LCD resolution (default)
+#elif defined(CONFIG_BSP_LCD_TYPE_1280_800)
+    config->width = 1280;  // ILI9881C LCD resolution 1280x800
     config->height = 800;
 #else
     config->width = 1280;  // Default resolution
@@ -58,7 +68,11 @@ static esp_err_t esp32_p4_function_ev_init(esp_bsp_sdl_display_config_t *config,
     config->max_transfer_sz = (config->width * config->height) * 2;  // 2 bytes per pixel for RGB565
 #endif
 
+#ifdef CONFIG_SDL_BSP_TOUCH_ENABLE
     config->has_touch = BSP_CAPS_TOUCH == 1;
+#else
+    config->has_touch = false;
+#endif
 
     // Step 2: Initialize BSP display using the official BSP
     ESP_LOGI(TAG, "Initializing display panel (%dx%d)...", config->width, config->height);
@@ -133,6 +147,7 @@ static esp_err_t esp32_p4_function_ev_display_on_off(bool enable)
 static esp_err_t esp32_p4_function_ev_touch_init(void)
 {
 #if BSP_CAPS_TOUCH == 1
+#ifdef CONFIG_SDL_BSP_TOUCH_ENABLE
     ESP_LOGI(TAG, "Initializing touch interface");
 
     const bsp_touch_config_t touch_cfg = {
@@ -147,6 +162,10 @@ static esp_err_t esp32_p4_function_ev_touch_init(void)
     ESP_LOGI(TAG, "Touch interface initialized successfully");
     return ESP_OK;
 #else
+    ESP_LOGW(TAG, "Touch disabled via CONFIG_SDL_BSP_TOUCH_ENABLE");
+    return ESP_ERR_NOT_SUPPORTED;
+#endif
+#else
     ESP_LOGW(TAG, "Touch not supported on this board configuration");
     return ESP_ERR_NOT_SUPPORTED;
 #endif
@@ -155,6 +174,7 @@ static esp_err_t esp32_p4_function_ev_touch_init(void)
 static esp_err_t esp32_p4_function_ev_touch_read(esp_bsp_sdl_touch_info_t *touch_info)
 {
 #if BSP_CAPS_TOUCH == 1
+#ifdef CONFIG_SDL_BSP_TOUCH_ENABLE
     if(!touch_info) {
         return ESP_ERR_INVALID_ARG;
     }
@@ -191,6 +211,15 @@ static esp_err_t esp32_p4_function_ev_touch_read(esp_bsp_sdl_touch_info_t *touch
     }
 
     return ESP_OK;
+#else
+    // Touch is disabled via configuration
+    if(touch_info) {
+        touch_info->pressed = false;
+        touch_info->x = 0;
+        touch_info->y = 0;
+    }
+    return ESP_ERR_NOT_SUPPORTED;
+#endif
 #else
     return ESP_ERR_NOT_SUPPORTED;
 #endif
