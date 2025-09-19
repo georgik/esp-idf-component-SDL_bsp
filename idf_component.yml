@@ -35,6 +35,12 @@ dependencies:
     matches:
       - if: "$CONFIG{SDL_BSP_M5STACK_TAB5} == True"
 
+  # Touch support - required by some BSPs (esp-box-3, core_s3, etc.)
+  # Making it unconditional since conditional Kconfig resolution is problematic
+  espressif/esp_lcd_touch:
+    version: "*"
+    require: "private"
+
 
 license: MIT License and the Apache License 2.0
 repository: https://github.com/georgik/esp-idf-component-SDL_bsp
