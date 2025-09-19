@@ -19,7 +19,7 @@ idf.py build flash monitor  # Use for all subsequent builds
 
 ```
 ┌─────────────────┐
-│  SDL Application │
+│ SDL Application │
 └─────────┬───────┘
           │
 ┌─────────▼───────┐
@@ -55,12 +55,14 @@ idf.py menuconfig
 Navigate to: `ESP-BSP SDL Configuration` → `Select Target Board`
 
 Choose from supported boards:
-- ESP-Box-3
-- ESP-Box
-- ESP32-C6 DevKit with ILI9341 Display  
-- M5Stack Core S3
-- ESP32-C3-LCDkit
-- ESP32-P4 Function EV Board
+- **ESP-Box-3** - ESP32-S3 with 320x240 display and touch
+- **M5 Atom S3** - Compact ESP32-S3 with 128x128 round display
+- **M5Stack Core S3** - ESP32-S3 with 320x240 display and touch
+- **ESP32-P4 Function EV Board** - High-performance ESP32-P4 with 1280x800 MIPI-DSI
+- **ESP32-S3-LCD-EV-Board** - ESP32-S3 evaluation board with 800x480 RGB display
+- **M5Stack Tab5** - ESP32-P4 tablet with 720x1280 MIPI-DSI display
+- **ESP32-C6 DevKit** - Generic BSP for ESP32-C6 with external display
+- **ESP32-C3-LCDkit** - ESP32-C3 development kit with LCD
 
 ### 2. Build and Flash
 ```bash
@@ -76,6 +78,61 @@ To switch to a different board:
 3. Run `idf.py build flash monitor`
 
 The abstraction layer will automatically handle the board-specific configuration.
+
+## Installation
+
+### Option 1: ESP Component Registry (Recommended)
+```bash
+idf.py add-dependency "georgik/sdl_bsp"
+```
+
+### Option 2: Git Submodule
+```bash
+cd components
+git submodule add https://github.com/georgik/esp-idf-component-SDL_bsp.git georgik__sdl_bsp
+```
+
+### Option 3: Manual Download
+1. Download from GitHub: https://github.com/georgik/esp-idf-component-SDL_bsp
+2. Extract to `components/georgik__sdl_bsp/` in your project
+
+## Quick Start
+
+### 1. Add to Your Project
+```bash
+# Add the component
+idf.py add-dependency "georgik/sdl_bsp"
+
+# Configure your board
+idf.py menuconfig
+```
+
+### 2. Select Board in Menuconfig
+Navigate to: `ESP-BSP SDL Configuration` → `Select Target Board`
+
+### 3. Use in Your Code
+```c
+#include "esp_bsp_sdl.h"
+
+void app_main(void)
+{
+    // Initialize display and get configuration
+    esp_bsp_sdl_display_config_t config;
+    esp_lcd_panel_handle_t panel_handle;
+    esp_lcd_panel_io_handle_t panel_io_handle;
+    
+    ESP_ERROR_CHECK(esp_bsp_sdl_init(&config, &panel_handle, &panel_io_handle));
+    
+    printf("Display: %dx%d, Touch: %s\n", 
+           config.width, config.height, 
+           config.has_touch ? "Yes" : "No");
+    
+    // Turn on backlight
+    ESP_ERROR_CHECK(esp_bsp_sdl_backlight_on());
+    
+    // Your SDL code here...
+}
+```
 
 ## Implementation Details
 
@@ -169,22 +226,57 @@ ESP_ERROR_CHECK(esp_bsp_sdl_backlight_on());
 ## Supported Boards
 
 Currently implemented boards:
-- ✅ ESP-Box-3 (`esp-box-3_noglib`)
-- 🚧 ESP-Box (`esp-box_noglib`) - Template provided
-- 🚧 ESP32-C6 DevKit (`esp_bsp_generic`) - Template provided  
-- 🚧 M5Stack Core S3 (`m5stack_core_s3`) - Template provided
-- 🚧 ESP32-C3-LCDkit (`esp32_c3_lcdkit`) - Template provided
-- 🚧 ESP32-P4 Function EV (`esp32_p4_function_ev_board`) - Template provided
+- ✅ **ESP-Box-3** (`esp-box-3_noglib`) - 320x240 ILI9341, Touch, OCTAL PSRAM
+- ✅ **M5 Atom S3** (`m5_atom_s3_noglib`) - 128x128 GC9A01, No PSRAM
+- ✅ **M5Stack Core S3** (`m5stack_core_s3_noglib`) - 320x240 ILI9341, Touch, QUAD PSRAM
+- ✅ **ESP32-P4 Function EV** (`esp32_p4_function_ev_board_noglib`) - 1280x800 MIPI-DSI, Touch, 32MB PSRAM
+- ✅ **ESP32-S3-LCD-EV-Board** (`esp32_s3_lcd_ev_board_noglib`) - 800x480 RGB, Touch, OCTAL PSRAM
+- ✅ **M5Stack Tab5** (`m5stack_tab5`) - 720x1280 MIPI-DSI (portrait), GT911 Touch, 32MB PSRAM @ 200MHz
+- 🚧 **ESP32-C6 DevKit** (`esp_bsp_generic`) - Generic BSP template
+- 🚧 **ESP32-C3-LCDkit** (`esp32_c3_lcdkit`) - Template provided
 
 Legend: ✅ Fully implemented, 🚧 Template provided (needs completion)
 
+### Board-Specific Features
+
+| Board | Display | Resolution | Touch | PSRAM | Interface |
+|-------|---------|------------|-------|-------|-----------|
+| ESP-Box-3 | ILI9341 | 320x240 | FT5x06 | 8MB OCTAL | SPI |
+| M5 Atom S3 | GC9A01 | 128x128 | - | - | SPI |
+| M5Stack Core S3 | ILI9341 | 320x240 | FT5x06 | 8MB QUAD | SPI |
+| ESP32-P4 Function EV | EK9716B | 1280x800 | GT1151 | 32MB | MIPI-DSI |
+| ESP32-S3-LCD-EV | RGB Panel | 800x480 | GT1151 | 32MB OCTAL | RGB |
+| M5Stack Tab5 | ILI9881C | 720x1280* | GT911 | 32MB @ 200MHz | MIPI-DSI |
+
+*M5Stack Tab5 uses 1280x720 landscape mode in SDL for better compatibility
+
 ## Dependencies
 
-The abstraction layer automatically manages dependencies based on the selected board:
-- ESP-BSP component for the selected board
-- `esp_lcd` for LCD operations
-- `esp_driver_ppa` (for ESP32-P4 targets)
-- Touch-related components (when supported by board)
+The abstraction layer uses **conditional dependencies** to load only the required BSP for your selected board:
+
+### Automatic Dependency Management
+- **Runtime Selection**: Only the selected board's BSP is loaded
+- **No Conflicts**: Prevents symbol conflicts between different BSPs
+- **Minimal Footprint**: Only necessary components are included
+
+### Core Dependencies (Always Loaded)
+- `esp_lcd` - LCD panel operations
+- `espressif__esp_lcd_touch` - Touch interface support
+
+### Board-Specific Dependencies (Conditional)
+| Board | BSP Component | Additional Dependencies |
+|-------|---------------|------------------------|
+| ESP-Box-3 | `espressif__esp-box-3_noglib` | - |
+| M5 Atom S3 | `espressif__m5_atom_s3_noglib` | - |
+| M5Stack Core S3 | `espressif__m5stack_core_s3_noglib` | `espressif__esp_lcd_touch` |
+| ESP32-P4 Function EV | `espressif__esp32_p4_function_ev_board_noglib` | `espressif__esp_lcd_touch` |
+| ESP32-S3-LCD-EV | `espressif__esp32_s3_lcd_ev_board_noglib` | `espressif__esp_lcd_touch` |
+| M5Stack Tab5 | `georgik__m5stack_tab5` | - |
+
+### ESP32-P4 Specific
+ESP32-P4 boards automatically include:
+- `esp_driver_ppa` - Pixel Processing Accelerator
+- MIPI-DSI interface support
 
 ## Critical Configuration Settings
 
@@ -217,6 +309,71 @@ CONFIG_ESP_SYSTEM_PANIC_PRINT_HALT=y   # Halt on panic instead of reboot
 - Memory issues become debuggable
 
 This setting is **critical** for development and should always be enabled during the development phase.
+
+## Touch Support
+
+The abstraction layer provides optional touch support for compatible boards:
+
+### Enabling Touch
+Touch support is disabled by default to avoid initialization conflicts. Enable it via menuconfig:
+
+```bash
+idf.py menuconfig
+```
+Navigate to: `ESP-BSP SDL Configuration` → `Enable Touch Support`
+
+### Touch-Compatible Boards
+- **ESP-Box-3**: FT5x06 capacitive touch controller
+- **M5Stack Core S3**: FT5x06 capacitive touch controller
+- **ESP32-P4 Function EV**: GT1151 capacitive touch controller
+- **ESP32-S3-LCD-EV-Board**: GT1151 capacitive touch controller
+- **M5Stack Tab5**: GT911 multi-point capacitive touch controller
+
+### Using Touch in Your Application
+```c
+#include "esp_bsp_sdl.h"
+
+// Initialize touch (if enabled and supported)
+if (esp_bsp_sdl_touch_init() == ESP_OK) {
+    printf("Touch initialized successfully\n");
+    
+    // Read touch data
+    esp_bsp_sdl_touch_info_t touch_info;
+    if (esp_bsp_sdl_touch_read(&touch_info) == ESP_OK) {
+        if (touch_info.pressed) {
+            printf("Touch at: %d, %d\n", touch_info.x, touch_info.y);
+        }
+    }
+}
+```
+
+## M5Stack Tab5 Special Requirements
+
+The **M5Stack Tab5** is an advanced ESP32-P4 tablet requiring special configuration:
+
+### Critical PSRAM Configuration
+```ini
+# MANDATORY for M5Stack Tab5
+CONFIG_SPIRAM=y
+CONFIG_SPIRAM_MODE_HEX=y
+CONFIG_SPIRAM_SPEED_200M=y  # CRITICAL: Must be 200MHz!
+CONFIG_SPIRAM_FETCH_INSTRUCTIONS=y
+CONFIG_SPIRAM_RODATA=y
+```
+
+**⚠️ Warning**: M5Stack Tab5 **requires 200MHz PSRAM speed**. Lower speeds (120MHz, 80MHz) will cause instability.
+
+### Display Orientation
+- **Physical orientation**: 720x1280 (portrait)
+- **SDL configuration**: 1280x720 (landscape) for better compatibility
+- **Touch coordinates**: Automatically rotated to match SDL orientation
+
+### Features
+- **Display**: 5-inch 720×1280 IPS via MIPI-DSI interface
+- **Touch**: GT911 multi-point capacitive touch controller
+- **Memory**: 32MB PSRAM @ 200MHz, 16MB Flash
+- **SoC**: ESP32-P4 dual-core RISC-V
+- **Interface**: MIPI-DSI for high-speed display communication
 
 ## Configuration Files
 
